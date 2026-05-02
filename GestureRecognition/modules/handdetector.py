@@ -151,6 +151,22 @@ class HandDetector(Module):
         return {}
 
     def step(self, data):
+
+        bild = data["webcam"]
+
+        bild2 = cv2.cvtColor(bild, cv2.COLOR_BGR2RGB)
+        bild3 = mp.Image(image_format=mp.ImageFormat.SRGB, data=bild2)
+
+        result = self.detector.detect(bild3)
+
+        galy = GALY(bild2)
+
+        for i in range(len(result.hand_landmarks)):
+            hand = result.hand_landmarks[i]
+            galy.draw_hand_landmarks(hand)
+
+        return {self.outputSignal: result, "galy": galy}
+
         """
         Verarbeitung eines einzelnen Frames.
 
