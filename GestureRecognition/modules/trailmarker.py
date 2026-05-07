@@ -163,7 +163,7 @@ class TrailMarker(Module):
         
         galy = GALY() #galy objekt erstellt für die linien später
 
-                 #for schleife, da wir ja eentuell 2 hände haben
+               
         mark = input_data.hand_landmark[0][self.finger_idx]  # landmark von zeichnenden finger definiert
         self.trajectory.append((mark.x, mark.y))          #position dieser landmark gespeichert im trajectory
         traj = self.trajectory
