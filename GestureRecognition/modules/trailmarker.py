@@ -100,6 +100,16 @@ class TrailMarker(Module):
         dict
             Ein leeres Dictionary.
         """
+        # Parameter aus config einlesen
+        config = data["config"]
+        self.finger_idx = get_nested_key("preprocessor.finger_idx", config)  # Welcher Landmark zum zeichnen benutzt wird
+        self.max_lost = get_nested_key("preprocessor.max_lost", config)  # Nach wie vielen frames ohne erkennung, die Zeichnung abbricht
+        self.buffer_size = get_nested_key("preprocessor.buffer_size", config)  # Max-Länge der Trajektorie
+
+        # Datentyp zum aufzeichnen der Trajektorie erstellen
+        self.trajectory = deque(maxlen=self.buffer_size)
+        self.lost_frames_counter = 0
+
         return {}
 
     def step(self, data):
