@@ -1,4 +1,4 @@
-from SignalHub import Module, get_nested_key
+from SignalHub import Module, get_nested_key, GALY
 from collections import deque
 
 class TrailMarker(Module):
@@ -165,7 +165,26 @@ class TrailMarker(Module):
 
             ``return { ..., "galy": galy}``
         """
-        return {}
+        input_data=data["detector"] #hier werden die detektierten hände plus landmarks geladen (für einen schritt)
+
+        if input_data is None:        # wenn nichts detektiert wird ist die funktion vorbei
+          self.lost_frames_counter+=1 # der lost frames counter geht dann einen hoch
+          return
+        
+        galy = GALY() #galy objekt erstellt für die linien später
+
+               
+        mark = input_data.hand_landmark[0][self.finger_idx]  # landmark von zeichnenden finger definiert
+        self.trajectory.append((mark.x, mark.y))          #position dieser landmark gespeichert im trajectory
+        traj = self.trajectory
+
+        if len(traj) > 1:             # nur linien malen wenn mehr als 1 punkt vorhanden
+          x1, y1 = traj[-2]            # hier wird die position der vorletzte landmark definiert
+          x2, y2 = traj[-1]            # hier die position des letzten eingetragenen landmark
+
+          galy.line(x1, y1, x2, y2)    # hier wird eine linie von der letzten zur vorletzten landmark im galy gespeichert
+
+        return {"galy": galy}
 
     def stop(self, data):
         """
