@@ -223,21 +223,8 @@ class HandDetector(Module):
     def stop(self, data):
         """
         Wird aufgerufen, wenn das Modul beendet wird.
-
-        Ziel ist es, bei Bedarf Ressourcen freizugeben oder interne
-        Zustände zurückzusetzen.
-
-        Hinweise
-        --------
-        - In vielen Fällen ist keine spezielle Bereinigung notwendig.
-
-        .. note::
-           Diese Methode ist optional, kann aber wichtig werden,
-           wenn externe Ressourcen (z. B. Modelle, Streams) verwendet werden.
-
-        Parameters
-        ----------
-        data : dict
-            Letzte übergebene Daten des Frameworks.
+        Gibt den allokierten Speicher des C++ MediaPipe-Modells frei.
         """
-        pass
+        if hasattr(self, 'detector'):
+            self.detector.close()
+            del self.detector
