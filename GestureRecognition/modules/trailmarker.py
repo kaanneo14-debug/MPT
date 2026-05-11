@@ -109,7 +109,7 @@ class TrailMarker(Module):
         # Datentyp zum aufzeichnen der Trajektorie erstellen
         self.trajectory = deque(maxlen=self.buffer_size)
         self.lost_frames_counter = 0
-
+        self.galy = None
         return {}
 
     def step(self, data):
@@ -167,14 +167,21 @@ class TrailMarker(Module):
         """
         input_data=data["detector"] #hier werden die detektierten hände plus landmarks geladen (für einen schritt)
 
+        if input_data is None or len(input_data.hand_landmarks) == 0:
+          self.galy = GALY(data["webcam"])
+
         if input_data is None:        # wenn nichts detektiert wird ist die funktion vorbei
           self.lost_frames_counter+=1 # der lost frames counter geht dann einen hoch
-          return
-        
-        galy = GALY() #galy objekt erstellt für die linien später
 
+          if self.lost_frames_counter > self.max_lost: # wenn Max lost frames überschritten wird , wird die trajectory neu angefangen und der counter zurückgesetzt
+             self.trajectory.clear()
+             self.lost_frames_counter=0
+             
+          return {}
+        
+        self.lost_frames_counter = 0
                
-        mark = input_data.hand_landmark[0][self.finger_idx]  # landmark von zeichnenden finger definiert
+        mark = input_data.hand_landmarks[0][self.finger_idx]  # landmark von zeichnenden finger definiert
         self.trajectory.append((mark.x, mark.y))          #position dieser landmark gespeichert im trajectory
         traj = self.trajectory
 
@@ -182,9 +189,9 @@ class TrailMarker(Module):
           x1, y1 = traj[-2]            # hier wird die position der vorletzte landmark definiert
           x2, y2 = traj[-1]            # hier die position des letzten eingetragenen landmark
 
-          galy.line(x1, y1, x2, y2)    # hier wird eine linie von der letzten zur vorletzten landmark im galy gespeichert
+          self.galy.line(x1, y1, x2, y2)    # hier wird eine linie von der letzten zur vorletzten landmark im galy gespeichert
 
-        return {"galy": galy}
+        return {"galy": self.galy}
 
     def stop(self, data):
         """
