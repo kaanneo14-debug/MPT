@@ -193,10 +193,10 @@ class Preprocessor(Module):
             return {"preprocessor": None}
         
         # Normalisieren
-        # a) Startpunkt-Zentrierung
+        # a) Startpunkt zentrierung
         traj = traj - traj[0]
 
-        # b) Skalierung (max Norm)
+        # b) Skalierung
         scale = np.max(np.linalg.norm(traj, axis=1))
         if scale > 1e-6:
             traj = traj / scale
