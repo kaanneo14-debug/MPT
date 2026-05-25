@@ -1,5 +1,6 @@
 from SignalHub import GALY, get_nested_key, Module
 from collections import deque
+import numpy as np
 
 class Preprocessor(Module):
     """
@@ -190,6 +191,15 @@ class Preprocessor(Module):
 
         if len(self.trajectory) < 2:
             return {"preprocessor": None}
+        
+        # Normalisieren
+        # a) Startpunkt-Zentrierung
+        traj = traj - traj[0]
+
+        # b) Skalierung (max Norm)
+        scale = np.max(np.linalg.norm(traj, axis=1))
+        if scale > 1e-6:
+            traj = traj / scale
 
         return {"preprocessor": self.trajectory}
 
