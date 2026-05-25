@@ -4,6 +4,7 @@ import sys
 import msvcrt
 import re
 import shutil
+import time
 
 
 def data_labeling(times: int, label: str):
@@ -88,22 +89,25 @@ def data_labeling(times: int, label: str):
       prozess = subprocess.Popen([
                   sys.executable,
                   "GestureRecognition/demo.py",
-                  "--recorder.file", r"dataset/zwischen_datei.pkl"
+                  "--recorder.file", r"datasets/zwischen_datei.pkl"
                ])
       # Beenden bei Tastendruck
-      eingabe = msvcrt.getch()
+      eingabe = input("Enter")
       prozess.terminate()
       prozess.wait()
 
+      time.sleep(5)
+      print(os.path.exists(r"datasets/zwischen_datei.pkl"))
+
+      eingabe = input("y, n")
       # Verwerfen
-      if eingabe != b"y":
-         os.remove("zwischen_datei.pkl")
-         pass
+      if eingabe != "y":
+         os.remove(r"datasets/zwischen_datei.pkl")
+         continue
 
       # Ordner erstellen, falls nicht vorhanden
       oberordner = rf"datasets/{label}"
-      if oberordner not in os.listdir("datasets"):
-         os.mkdir(rf"datasets/{label}")
+      os.makedirs(oberordner, exist_ok=True)
 
       # Richtigen Ordnernamen rausifnden mit regex
       max_index = -1
@@ -117,7 +121,7 @@ def data_labeling(times: int, label: str):
 
       # Verschieben an richtigen Speicherort
       zielpfad = os.path.join(oberordner, name)
-      shutil.move("zwischen_datei.pkl", zielpfad)
+      shutil.move(r"datasets/zwischen_datei.pkl", zielpfad)
 
 
 

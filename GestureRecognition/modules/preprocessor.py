@@ -62,7 +62,6 @@ class Preprocessor(Module):
             outputSchema={"type": "object", "properties": {outputSignal: {}}},
             name="preprocessor",
         )
-        self.outputSignal = outputSignal
 
     def start(self, data):
         """
@@ -182,7 +181,7 @@ class Preprocessor(Module):
             if self.lost_frames_counter > self.max_lost:
                 self.trajectory.clear()
                 self.lost_frames_counter = 0
-            return {self.outputSignal: None}
+            return {"preprocessor": None}
 
         self.lost_frames_counter = 0
 
@@ -190,9 +189,9 @@ class Preprocessor(Module):
         self.trajectory.append((mark.x, mark.y))
 
         if len(self.trajectory) < 2:
-            return {self.outputSignal: None}
+            return {"preprocessor": None}
 
-        return {self.outputSignal: self.trajectory}
+        return {"preprocessor": self.trajectory}
 
     def stop(self, data):
         """
