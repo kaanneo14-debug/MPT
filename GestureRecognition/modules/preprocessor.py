@@ -193,12 +193,12 @@ class Preprocessor(Module):
             return {"preprocessor": None}
         
         # Normalisieren
-        # a) Startpunkt zentrierung
+        # alle punkte relativ zum 1.Punkt
         traj = traj - traj[0]
 
-        # b) Skalierung
+        # durch maximalen astand zum ursprung(1.Koordinate)
         scale = np.max(np.linalg.norm(traj, axis=1))
-        if scale > 1e-6:
+        if scale > 1e-6:  # falls abstand == 0
             traj = traj / scale
 
         return {"preprocessor": self.trajectory}
