@@ -1,3 +1,11 @@
+import os
+import subprocess
+import sys
+import msvcrt
+import re
+import shutil
+
+
 def data_labeling(times: int, label: str):
     """
     TODO: data_labeling: Datenerfassung für Gesten (SignalHub)
@@ -16,6 +24,9 @@ def data_labeling(times: int, label: str):
        - Übergib einen Dateipfad für die Aufnahme
        - Überlege, welche Module aufgenommen werden sollen
        - Nimm entsprechende Änderungen in der ``config.yaml`` vor
+
+    root = os.getcwd()
+    data_path = os.path.join(root, "data")
 
     2. Interaktive Steuerung (optional)
 
@@ -71,7 +82,42 @@ def data_labeling(times: int, label: str):
         Name der Geste / Klasse.
         Kann ebenfalls frei gestaltet werden (z. B. dynamische Labels, mehrere Klassen gleichzeitig).
     """
-    pass
+    for _ in range(times):
+
+      # Pipeline starten
+      prozess = subprocess.Popen([
+                  sys.executable,
+                  "GestureRecognition/demo.py",
+                  "--recorder.file", r"dataset/zwischen_datei.pkl"
+               ])
+      # Beenden bei Tastendruck
+      eingabe = msvcrt.getch()
+      prozess.terminate()
+      prozess.wait()
+
+      # Verwerfen
+      if eingabe != b"y":
+         os.remove("zwischen_datei.pkl")
+         pass
+
+      # Ordner erstellen, falls nicht vorhanden
+      oberordner = rf"datasets/{label}"
+      if oberordner not in os.listdir("datasets"):
+         os.mkdir(rf"datasets/{label}")
+
+      # Richtigen Ordnernamen rausifnden mit regex
+      max_index = -1
+      for datei in os.listdir(oberordner):
+         match = re.search(r"(\d+)\.pkl$", datei)
+         if match:
+               index = int(match.group(1))
+               max_index = max(max_index, index)
+      neuer_index = max_index + 1
+      name = f"{label}_{neuer_index}.pkl"
+
+      # Verschieben an richtigen Speicherort
+      zielpfad = os.path.join(oberordner, name)
+      shutil.move("zwischen_datei.pkl", zielpfad)
 
 
 
@@ -146,3 +192,6 @@ def dataset_building(output_path):
         Zielpfad für den erzeugten Trainingsdatensatz.
     """
     pass
+if __name__ == "__main__":
+    # Beispiel: 5 Aufnahmen der Geste "A"
+    data_labeling(times=5, label="A")

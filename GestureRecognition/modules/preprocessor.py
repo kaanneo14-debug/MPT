@@ -62,6 +62,7 @@ class Preprocessor(Module):
             outputSchema={"type": "object", "properties": {outputSignal: {}}},
             name="preprocessor",
         )
+        self.outputSignal = outputSignal
 
     def start(self, data):
         """
@@ -104,6 +105,15 @@ class Preprocessor(Module):
         dict
             Ein leeres Dictionary.
         """
+        # Parameter aus config einlesen
+        config = data["config"]
+        self.finger_idx = get_nested_key("preprocessor.finger_idx", config)  # Welcher Landmark zum zeichnen benutzt wird
+        self.max_lost = get_nested_key("preprocessor.max_lost", config)  # Nach wie vielen frames ohne erkennung, die Zeichnung abbricht
+        self.buffer_size = get_nested_key("preprocessor.buffer_size", config)  # Max-Länge der Trajektorie
+
+        # Datentyp zum aufzeichnen der Trajektorie erstellen
+        self.trajectory = deque(maxlen=self.buffer_size)
+        self.lost_frames_counter = 0
         return {}
 
     def step(self, data):
@@ -164,7 +174,25 @@ class Preprocessor(Module):
 
             ``return {outputSignal: trajectory}``
         """
-        return {}
+        # erkannte landmarks erhalten
+        results = data["detector"]
+
+        if results is None or len(results.hand_landmarks) == 0:
+            self.lost_frames_counter += 1
+            if self.lost_frames_counter > self.max_lost:
+                self.trajectory.clear()
+                self.lost_frames_counter = 0
+            return {self.outputSignal: None}
+
+        self.lost_frames_counter = 0
+
+        mark = results.hand_landmarks[0][self.finger_idx]
+        self.trajectory.append((mark.x, mark.y))
+
+        if len(self.trajectory) < 2:
+            return {self.outputSignal: None}
+
+        return {self.outputSignal: self.trajectory}
 
     def stop(self, data):
         """
