@@ -92,14 +92,13 @@ def data_labeling(times: int, label: str):
                   "--recorder.file", r"datasets/zwischen_datei.pkl"
                ])
       # Beenden bei Tastendruck
-      eingabe = input("Enter")
+      eingabe = input("Enter zum Beenden")
       prozess.terminate()
       prozess.wait()
 
-      time.sleep(5)
       print(os.path.exists(r"datasets/zwischen_datei.pkl"))
 
-      eingabe = input("y, n")
+      eingabe = input("speichern? (y/n): ")
       # Verwerfen
       if eingabe != "y":
          os.remove(r"datasets/zwischen_datei.pkl")
@@ -109,7 +108,7 @@ def data_labeling(times: int, label: str):
       oberordner = rf"datasets/{label}"
       os.makedirs(oberordner, exist_ok=True)
 
-      # Richtigen Ordnernamen rausifnden mit regex
+      # Richtigen filenamen rausifnden mit regex
       max_index = -1
       for datei in os.listdir(oberordner):
          match = re.search(r"(\d+)\.pkl$", datei)
