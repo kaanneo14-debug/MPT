@@ -51,7 +51,7 @@ class HandDetector(Module):
         # 2. Spezifische Optionen für die Handdetektion konfigurieren
         options = vision.HandLandmarkerOptions(
             base_options=base_options,
-            num_hands=2, # Relevant, falls der Prüfer zweihändige Gesten testet
+            num_hands=1,
             min_hand_detection_confidence=0.5,
             min_hand_presence_confidence=0.5,
             min_tracking_confidence=0.5

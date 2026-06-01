@@ -89,7 +89,8 @@ def data_labeling(times: int, label: str):
       prozess = subprocess.Popen([
                   sys.executable,
                   "GestureRecognition/demo.py",
-                  "--recorder.file", r"datasets/zwischen_datei.pkl"
+                  "--mode", "record",
+                  "--recorder", r"datasets/zwischen_datei.pkl",
                ])
       # Beenden bei Tastendruck
       eingabe = input("Enter zum Beenden")
