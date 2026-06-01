@@ -166,11 +166,11 @@ class TrailMarker(Module):
 
             ``return { ..., "galy": galy}``
         """
-        input_data=data["detector"] #hier werden die detektierten hände plus landmarks geladen (für einen schritt
-        self.galy=GALY()#doppelte liste 
+        input_data=data["detector"] 
+        self.galy=GALY()
        
-        if input_data is None:        # wenn nichts detektiert wird ist die funktion vorbei
-          self.lost_frames_counter+=1 # der lost frames counter geht dann einen hoch
+        if not input_data.hand_landmarks:        
+          self.lost_frames_counter+=1 
           for segment in self.trajectory:
             for i in range(len(segment) - 1):
                 x1, y1 = segment[i]
@@ -183,7 +183,7 @@ class TrailMarker(Module):
                 thickness=2
             )
              
-          if self.lost_frames_counter > self.max_lost: # wenn Max lost frames überschritten wird , wird die trajectory neu angefangen und der counter zurückgesetzt
+          if self.lost_frames_counter > self.max_lost: 
              self.lost_frames_counter=0
              self.trajectory.append(list(self.current_trajectory))
              self.current_trajectory.clear()
@@ -198,11 +198,11 @@ class TrailMarker(Module):
 
 
         x = int(mark.x * width)
-        y = int(mark.y * height)  # landmark von zeichnenden finger definiert
+        y = int(mark.y * height)  
 
-        self.current_trajectory.append((x, y))          #position dieser landmark gespeichert im trajectory
+        self.current_trajectory.append((x, y))          
         for i in range(len(self.current_trajectory) - 1):
-            x1, y1 = self.current_trajectory[i]            # hier wird die position der vorletzte landmark definiert
+            x1, y1 = self.current_trajectory[i]            
             x2, y2 = self.current_trajectory[i+1] 
                 
             self.galy.line(
