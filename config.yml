@@ -4,11 +4,6 @@ engine:
 recorder:
   file: record/test.pickle
   replay:
-  """
-    - trailmarker
-    - preprocessor
-    - hiddenmarkov
-    """"
     - detector
 webcam:
   deviceIndex: 0

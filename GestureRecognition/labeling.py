@@ -5,6 +5,7 @@ import msvcrt
 import re
 import shutil
 import time
+import signal
 
 
 def data_labeling(times: int, label: str):
@@ -90,15 +91,17 @@ def data_labeling(times: int, label: str):
                   sys.executable,
                   "GestureRecognition/demo.py",
                   "--mode", "record",
-                  "--recorder", r"datasets/zwischen_datei.pkl",
-               ])
+                  "--recorder.file", r"datasets/zwischen_datei.pkl"],
+                  creationflags=subprocess.CREATE_NEW_PROCESS_GROUP
+               )
       # Beenden bei Tastendruck
       eingabe = input("Enter zum Beenden")
-      prozess.terminate()
-      prozess.wait()
-
-      print(os.path.exists(r"datasets/zwischen_datei.pkl"))
-
+      try:
+         prozess.send_signal(signal.CTRL_BREAK_EVENT)
+      except Exception:
+         prozess.terminate()
+      prozess.wait(timeout=5)
+        
       eingabe = input("speichern? (y/n): ")
       # Verwerfen
       if eingabe != "y":
