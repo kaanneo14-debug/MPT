@@ -200,5 +200,5 @@ def dataset_building(output_path):
     """
     pass
 if __name__ == "__main__":
-    # Beispiel: 5 Aufnahmen der Geste "A"
+    # Austesten
     data_labeling(times=5, label="A")

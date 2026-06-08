@@ -3,7 +3,7 @@ engine:
   autoclose: False
 recorder:
   file: record/test.pickle
-  replay:
+  record:
     - detector
 webcam:
   deviceIndex: 0
