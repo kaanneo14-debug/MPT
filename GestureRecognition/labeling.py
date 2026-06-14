@@ -8,6 +8,7 @@ import time
 import signal
 
 
+
 def data_labeling(times: int, label: str):
     """
     TODO: data_labeling: Datenerfassung für Gesten (SignalHub)
@@ -85,29 +86,6 @@ def data_labeling(times: int, label: str):
         Kann ebenfalls frei gestaltet werden (z. B. dynamische Labels, mehrere Klassen gleichzeitig).
     """
     for _ in range(times):
-
-      # Pipeline starten
-      prozess = subprocess.Popen([
-                  sys.executable,
-                  "GestureRecognition/demo.py",
-                  "--mode", "record",
-                  "--recorder.file", r"datasets/zwischen_datei.pkl"],
-                  creationflags=subprocess.CREATE_NEW_PROCESS_GROUP
-               )
-      # Beenden bei Tastendruck
-      eingabe = input("Enter zum Beenden")
-      try:
-         prozess.send_signal(signal.CTRL_BREAK_EVENT)
-      except Exception:
-         prozess.terminate()
-      prozess.wait(timeout=5)
-        
-      eingabe = input("speichern? (y/n): ")
-      # Verwerfen
-      if eingabe != "y":
-         os.remove(r"datasets/zwischen_datei.pkl")
-         continue
-
       # Ordner erstellen, falls nicht vorhanden
       oberordner = rf"datasets/{label}"
       os.makedirs(oberordner, exist_ok=True)
@@ -121,10 +99,41 @@ def data_labeling(times: int, label: str):
                max_index = max(max_index, index)
       neuer_index = max_index + 1
       name = f"{label}_{neuer_index}.pkl"
-
-      # Verschieben an richtigen Speicherort
       zielpfad = os.path.join(oberordner, name)
-      shutil.move(r"datasets/zwischen_datei.pkl", zielpfad)
+      print("##########################")
+      print(zielpfad)
+
+      # Pipeline starten
+      prozess = subprocess.Popen([
+                  sys.executable,
+                  "GestureRecognition/demo.py",
+                  "--mode", "record",
+                  "--recorder.file", zielpfad],
+                  creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+               
+      # Beenden bei Tastendruck
+      print("Enter zum Beenden")
+
+      #
+      if msvcrt.getch() == b'\r':
+         prozess.terminate()
+         prozess.wait()
+      #
+        
+      eingabe = input("speichern? (y/n): ")
+   
+
+      # Verwerfen
+      if eingabe != "y":
+         os.remove(zielpfad)
+         continue
+
+   
+      # Nur 1. frm bis letzten frm mit erkannter hand behalten
+      # laden der pckl
+      # nur den ebriech behalten
+      # speichern
+
 
 
 
@@ -201,4 +210,4 @@ def dataset_building(output_path):
     pass
 if __name__ == "__main__":
     # Austesten
-    data_labeling(times=5, label="A")
+    data_labeling(times=5, label="B")

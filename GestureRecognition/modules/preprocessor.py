@@ -194,6 +194,7 @@ class Preprocessor(Module):
         
         # Normalisieren
         # alle punkte relativ zum 1.Punkt
+        traj = np.array(self.trajectory)
         traj = traj - traj[0]
 
         # durch maximalen astand zum ursprung(1.Koordinate)
@@ -201,7 +202,7 @@ class Preprocessor(Module):
         if scale > 1e-6:  # falls abstand == 0
             traj = traj / scale
 
-        return {"preprocessor": self.trajectory}
+        return {"preprocessor": traj}
 
     def stop(self, data):
         """
