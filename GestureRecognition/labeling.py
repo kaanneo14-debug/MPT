@@ -112,7 +112,7 @@ def data_labeling(times: int, label: str):
                   creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
                
       # Beenden bei Tastendruck
-      print("Enter zum Beenden")
+      print("ESC zum Beenden")
 
       #
       if msvcrt.getch() == b'\r':
