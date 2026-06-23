@@ -50,15 +50,20 @@ def data_labeling(times: int, label: str):
     current_sequence = []
 
     print(f"\nLabel: '{label}'  |  Ziel: {times} Aufnahmen")
-    print("LEERTASTE = Aufnahme starten/stoppen")
-    print("ESC = speichern  |  andere Taste = verwerfen  |  Q = beenden\n")
+    print("LEERTASTE = Aufnahme starten / stoppen + speichern")
+    print("Q oder Fenster schliessen = beenden\n")
 
     with HandLandmarker.create_from_options(options) as landmarker:
         cap = cv2.VideoCapture(0)
+        cv2.namedWindow("Labeling")
 
         while cap.isOpened() and recordings_done < times:
             ret, frame = cap.read()
             if not ret:
+                break
+
+            # Fenster-X-Button abfangen
+            if cv2.getWindowProperty("Labeling", cv2.WND_PROP_VISIBLE) < 1:
                 break
 
             frame = cv2.flip(frame, 1)
@@ -68,7 +73,9 @@ def data_labeling(times: int, label: str):
 
             result = landmarker.detect_for_video(mp_image, timestamp)
 
-            if recording and result.hand_landmarks:
+            hand_detected = bool(result.hand_landmarks)
+
+            if recording and hand_detected:
                 landmarks = result.hand_landmarks[0]
                 frame_features = []
                 for lm in landmarks:
@@ -76,19 +83,19 @@ def data_labeling(times: int, label: str):
                 current_sequence.append(frame_features)
 
             # Statusanzeige
-            status = "● REC" if recording else "BEREIT"
-            color = (0, 0, 255) if recording else (0, 200, 0)
-            cv2.putText(
-                frame,
-                f"[{label}] {status}  ({recordings_done}/{times})",
-                (10, 35), cv2.FONT_HERSHEY_SIMPLEX, 0.9, color, 2,
-            )
             if recording:
-                cv2.putText(
-                    frame,
-                    f"Frames: {len(current_sequence)}",
-                    (10, 65), cv2.FONT_HERSHEY_SIMPLEX, 0.65, color, 1,
-                )
+                status = f"REC  {len(current_sequence)} frames"
+                color = (0, 0, 255)
+            else:
+                status = "BEREIT  [LEERTASTE]"
+                color = (0, 200, 0)
+
+            if not hand_detected:
+                cv2.putText(frame, "Keine Hand erkannt", (10, 65),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 140, 255), 1)
+
+            cv2.putText(frame, f"[{label}] {status}  ({recordings_done}/{times})",
+                        (10, 35), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2)
 
             cv2.imshow("Labeling", frame)
             key = cv2.waitKey(1) & 0xFF
@@ -101,34 +108,25 @@ def data_labeling(times: int, label: str):
                 else:
                     recording = False
                     n_frames = len(current_sequence)
-                    print(f"  Gestoppt. {n_frames} Frames aufgenommen.")
-
-                    if n_frames < 10:
-                        print("  Zu kurz (< 10 Frames), automatisch verworfen.\n")
-                        current_sequence = []
-                        continue
-
-                    print("  ESC = speichern  |  andere Taste = verwerfen")
-                    save_key = cv2.waitKey(0) & 0xFF
-                    if save_key == 27:  # ESC
+                    if n_frames >= 10:
                         seq_array = np.array(current_sequence, dtype=np.float32)
                         save_path = data_dir / f"{recording_idx:04d}.pkl"
                         with open(save_path, "wb") as f:
                             pickle.dump(seq_array, f)
-                        print(f"  Gespeichert: {save_path}\n")
+                        print(f"  Gespeichert ({n_frames} Frames): {save_path}")
                         recording_idx += 1
                         recordings_done += 1
                     else:
-                        print("  Verworfen.\n")
+                        print(f"  Zu kurz ({n_frames} Frames), verworfen. Bitte laenger halten.")
                     current_sequence = []
 
-            elif key == ord("q"):
+            elif key == ord("q") or key == 27:  # Q oder ESC
                 break
 
         cap.release()
         cv2.destroyAllWindows()
 
-    print(f"Fertig! {recordings_done} Aufnahmen für '{label}' gespeichert.")
+    print(f"Fertig! {recordings_done} Aufnahmen fuer '{label}' gespeichert.")
 
 
 def dataset_building(output_path):

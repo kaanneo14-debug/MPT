@@ -119,12 +119,15 @@ class HMMClassifier:
             - "confusion_matrix": np.ndarray
             - "classes": list
         """
+        from collections import Counter
         indices = list(range(len(sequences)))
+        min_count = min(Counter(labels).values())
+        use_stratify = labels if min_count >= 2 else None
         train_idx, test_idx = train_test_split(
             indices,
             test_size=test_size,
             random_state=random_state,
-            stratify=labels,
+            stratify=use_stratify,
         )
 
         train_seqs = [sequences[i] for i in train_idx]

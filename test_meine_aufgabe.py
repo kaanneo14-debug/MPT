@@ -23,8 +23,8 @@ from GestureRecognition.hmmclassifier import HMMClassifier
 #   Q          -> diesen Buchstaben ueberspringen
 # ---------------------------------------------------------------
 
-BUCHSTABEN = ["J", "K", "L"]   # <-- zum Testen erst nur 3 Buchstaben
-AUFNAHMEN_PRO_BUCHSTABE = 3    # <-- zum Testen reichen 3
+BUCHSTABEN = list("JKLMNOPQR")  # alle 9 Buchstaben J bis R
+AUFNAHMEN_PRO_BUCHSTABE = 5    # 5 Aufnahmen pro Buchstabe
 
 print("=" * 50)
 print("SCHRITT 1: Trainingsdaten aufnehmen")
@@ -33,19 +33,22 @@ print(f"Buchstaben: {BUCHSTABEN}")
 print(f"Aufnahmen pro Buchstabe: {AUFNAHMEN_PRO_BUCHSTABE}")
 print()
 print("Anleitung:")
-print("  1. Kamera oeffnet sich")
-print("  2. Forme die Handgeste fuer den Buchstaben")
-print("  3. LEERTASTE druecken -> Aufnahme startet (roter Text)")
-print("  4. Geste kurz halten oder bewegen (~1-2 Sekunden)")
-print("  5. LEERTASTE druecken -> Aufnahme stoppt")
-print("  6. ESC druecken -> gespeichert!")
-print("  7. Wiederhole bis alle Aufnahmen fertig sind")
+print("  1. Kamera oeffnet sich fuer jeden Buchstaben")
+print("  2. Forme die Handgeste")
+print("  3. LEERTASTE -> Aufnahme startet (roter Text)")
+print("  4. ~1-2 Sekunden halten")
+print("  5. LEERTASTE -> stoppt und speichert automatisch")
+print("  6. Wiederhole bis (5/5), dann geht es zum naechsten Buchstaben")
+print("  7. Q oder ESC = diesen Buchstaben abbrechen")
 print()
-input("Enter druecken zum Starten...")
+antwort = input("Neue Aufnahmen machen? (j/n): ").strip().lower()
 
-for buchstabe in BUCHSTABEN:
-    print(f"\n>>> Buchstabe: {buchstabe} <<<")
-    data_labeling(AUFNAHMEN_PRO_BUCHSTABE, buchstabe)
+if antwort == "j":
+    for buchstabe in BUCHSTABEN:
+        print(f"\n>>> Buchstabe: {buchstabe} <<<")
+        data_labeling(AUFNAHMEN_PRO_BUCHSTABE, buchstabe)
+else:
+    print("Aufnahme uebersprungen, nutze vorhandene Daten.")
 
 # ---------------------------------------------------------------
 # SCHRITT 2: Datensatz zusammenbauen
