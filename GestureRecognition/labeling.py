@@ -1,11 +1,13 @@
 import os
 import subprocess
 import sys
-import msvcrt
 import re
 import shutil
-import time
 import signal
+import pickle
+from SignalHub import get_nested_key
+from collections import deque
+import numpy as np
 
 
 
@@ -85,6 +87,7 @@ def data_labeling(times: int, label: str):
         Name der Geste / Klasse.
         Kann ebenfalls frei gestaltet werden (z. B. dynamische Labels, mehrere Klassen gleichzeitig).
     """
+    counter = 0
     for _ in range(times):
       # Ordner erstellen, falls nicht vorhanden
       oberordner = rf"datasets/{label}"
@@ -100,8 +103,6 @@ def data_labeling(times: int, label: str):
       neuer_index = max_index + 1
       name = f"{label}_{neuer_index}.pkl"
       zielpfad = os.path.join(oberordner, name)
-      print("##########################")
-      print(zielpfad)
 
       # Pipeline starten
       prozess = subprocess.Popen([
@@ -112,102 +113,77 @@ def data_labeling(times: int, label: str):
                   creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
                
       # Beenden bei Tastendruck
-      print("ESC zum Beenden")
+      print("ESC zum Beenden der AUfnahme")      
+      prozess.wait()
 
-      #
-      if msvcrt.getch() == b'\r':
-         prozess.terminate()
-         prozess.wait()
-      #
         
-      eingabe = input("speichern? (y/n): ")
+      eingabe = input("Zum verwerfen N drücken. Ansonsten beliebige Taste")  # input ist os unabhängig
    
 
       # Verwerfen
-      if eingabe != "y":
+      if eingabe == "n":
          os.remove(zielpfad)
          continue
-
-   
-      # Nur 1. frm bis letzten frm mit erkannter hand behalten
-      # laden der pckl
-      # nur den ebriech behalten
-      # speichern
+      counter += 1
+      if counter == times:
+          return
 
 
 
 
 
-def dataset_building(output_path):
-    """
-    TODO: dataset_building: Trainingsdatensatz aus aufgenommenen Gesten erstellen
+def dataset_building(output_path="processed_data"):
 
-    Ziel:
-    -----
-    Implementiere eine Funktion, die alle aufgenommenen Daten lädt,
-    verarbeitet und in eine Form bringt, die von eurem
-    Hidden-Markov-Modell (HMM) Classifier verwendet werden kann.
+    # processed_data Ordner erstellen
+    print(os.getcwd())
+    os.makedirs(output_path, exist_ok=True)
+    # iteriere durch alle oberordner in raw-data
+    for oberordner in os.listdir("datasets"):
+      # erstelle den oberordner in processed data
+      os.makedirs(f"{output_path}/{oberordner}", exist_ok=True)
+      # iteriere durch alle samples in raw data
+      for sample in os.listdir(f"datasets/{oberordner}"):
+         # vorbereitubng
+         traj = deque()
+         # lade den sample
+         with open(f"datasets/{oberordner}/{sample}", "rb") as f:
+             file = pickle.load(f)         
+         results = file["detector"] # beeinhaltet detector daten pro frame
+         # Deque erstellen
+         for frame in range(len(results)):
+             frame_data = results[frame]
+             #1. Nones/leer werte entf 
+             if frame_data is None: # #results[frame] kann None sein
+                 continue
+             if len(frame_data) == 0: #results[frame] kann leer sein
+               continue
 
-    Anforderungen / Ideen:
-    ----------------------
+             landmarks = frame_data["detector"].hand_landmarks  # kann leere liste sein
+             if len(landmarks) == 0:
+                continue
+             landmarks = landmarks[0]
+             pos = landmarks[8]
+             traj.append((pos.x, pos.y))
+         # transformiere die deque/preprocessing
+         if len(traj) == 0: # falls ganze aufnahme keine detektion hat
+             continue
+         
+         # In Array umwandeln
+         traj = np.array(traj)
+         # 2. relativ zum 1.punkt
+         traj = traj - traj[0]
+         # 3. durch maximalen astand zum ursprung(1.Koordinate)
+         scale = np.max(np.linalg.norm(traj, axis=1))
+         if scale > 1e-6:  # falls abstand == 0
+               traj = traj / scale
+         # 4. Verbindungsvektor
+         traj = np.diff(traj, axis=0)
 
-    1. Daten laden
-
-       - Durchsuche deinen Trainingsdaten-Ordner
-       - Organisiere Daten nach Labels
-
-    2. Feature-Extraktion / Preprocessing
-
-       - Überlege:
-         - Welche Features braucht dein Modell?
-         - Wie transformierst du die Rohdaten sinnvoll?
-       - Wende eine konsistente Verarbeitung auf alle Sequenzen an
-
-    3. Umgang mit Sequenzen
-
-       - Daten sind zeitliche Sequenzen
-       - Achte auf:
-         - Unterschiedliche Längen
-         - Konsistente Struktur
-
-    4. Validierung
-
-       - Entferne unbrauchbare Daten
-         (z. B. zu kurze oder fehlerhafte Sequenzen)
-
-    5. Ausgabeformat
-
-       - Baue den Datensatz so, dass dein HMM direkt damit arbeiten kann
-       - Das Format sollst du selbst definieren
-
-    .. note::
-
-       Es gibt hier keine vorgegebene „richtige“ Lösung.
-       Wichtig ist, dass dein Datensatz konsistent und nutzbar ist.
-
-    .. tip::
-
-       Denke wie ein System-Designer:
-       Wie müssen Daten aussehen, damit Training und Inferenz sauber funktionieren?
-
-    .. warning::
-
-       Inkonsistente Datenstrukturen sind eine der häufigsten Fehlerquellen
-       beim Training von Sequenzmodellen.
-
-    Erweiterung (optional):
-    -----------------------
-
-    - Normalisierung der Daten
-    - Datenaugmentation
-    - Debug-Ausgaben oder Visualisierung
-
-    Parameters
-    ----------
-    output_path : Path or str
-        Zielpfad für den erzeugten Trainingsdatensatz.
-    """
-    pass
+         # Zielpfad definieren
+         zielpfad = f"{output_path}/{oberordner}/{sample}"
+         # SPeichern
+         np.save(zielpfad, traj)
 if __name__ == "__main__":
     # Austesten
-    data_labeling(times=5, label="B")
+    #dataset_building()
+    data_labeling(5, "W")

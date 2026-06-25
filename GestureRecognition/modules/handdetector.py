@@ -69,13 +69,11 @@ class HandDetector(Module):
         bild3 = mp.Image(image_format=mp.ImageFormat.SRGB, data=bild2)
 
         result = self.detector.detect(bild3)
-
         galy = GALY()
 
         for i in range(len(result.hand_landmarks)):
             hand = result.hand_landmarks[i]
             draw_hand_landmarks(hand, galy)
-
         return {"detector": result, "galy": galy}
 
     def stop(self, data):
