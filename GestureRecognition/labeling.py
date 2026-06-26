@@ -8,6 +8,7 @@ import pickle
 from SignalHub import get_nested_key
 from collections import deque
 import numpy as np
+import yaml
 
 
 
@@ -134,8 +135,10 @@ def data_labeling(times: int, label: str):
 
 def dataset_building(output_path="processed_data"):
 
-    # processed_data Ordner erstellen
-    print(os.getcwd())
+    # Vorbereitung
+    with open("config.yml", "r") as f:
+        config = yaml.safe_load(f)
+    finger_idx = get_nested_key("preprocessor.finger_idx", config)
     os.makedirs(output_path, exist_ok=True)
     # iteriere durch alle oberordner in raw-data
     for oberordner in os.listdir("datasets"):
@@ -143,8 +146,9 @@ def dataset_building(output_path="processed_data"):
       os.makedirs(f"{output_path}/{oberordner}", exist_ok=True)
       # iteriere durch alle samples in raw data
       for sample in os.listdir(f"datasets/{oberordner}"):
-         # vorbereitubng
+         # vorbereitunng
          traj = deque()
+
          # lade den sample
          with open(f"datasets/{oberordner}/{sample}", "rb") as f:
              file = pickle.load(f)         
@@ -162,7 +166,7 @@ def dataset_building(output_path="processed_data"):
              if len(landmarks) == 0:
                 continue
              landmarks = landmarks[0]
-             pos = landmarks[8]
+             pos = landmarks[finger_idx]
              traj.append((pos.x, pos.y))
          # transformiere die deque/preprocessing
          if len(traj) == 0: # falls ganze aufnahme keine detektion hat
@@ -185,5 +189,5 @@ def dataset_building(output_path="processed_data"):
          np.save(zielpfad, traj)
 if __name__ == "__main__":
     # Austesten
-    #dataset_building()
-    data_labeling(5, "W")
+    dataset_building()
+    #data_labeling(5, "W")
