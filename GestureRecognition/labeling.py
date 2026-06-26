@@ -134,21 +134,21 @@ def data_labeling(times: int, label: str):
 
 
 def dataset_building(output_path="processed_data"):
-
-    # Vorbereitung
+    # Finger idx extrahieren
     with open("config.yml", "r") as f:
         config = yaml.safe_load(f)
     finger_idx = get_nested_key("preprocessor.finger_idx", config)
     os.makedirs(output_path, exist_ok=True)
     # iteriere durch alle oberordner in raw-data
     for oberordner in os.listdir("datasets"):
-      # erstelle den oberordner in processed data
-      os.makedirs(f"{output_path}/{oberordner}", exist_ok=True)
+      # Trainingsdaten festlegen
+      files = os.listdir(f"datasets/{oberordner}")
+      boundary = int(0.8*len(files))
+      train_files = files[:boundary] 
       # iteriere durch alle samples in raw data
       for sample in os.listdir(f"datasets/{oberordner}"):
          # vorbereitunng
          traj = deque()
-
          # lade den sample
          with open(f"datasets/{oberordner}/{sample}", "rb") as f:
              file = pickle.load(f)         
@@ -183,10 +183,20 @@ def dataset_building(output_path="processed_data"):
          # 4. Verbindungsvektor
          traj = np.diff(traj, axis=0)
 
-         # Zielpfad definieren
-         zielpfad = f"{output_path}/{oberordner}/{sample}"
-         # SPeichern
-         np.save(zielpfad, traj)
+         # SPeichern in richtigem ordner
+         if sample in train_files:
+            os.makedirs(f"{output_path}/train", exist_ok=True)
+            os.makedirs(f"{output_path}/train/{oberordner}", exist_ok=True)
+            zielpfad = f"{output_path}/train/{oberordner}/{sample}"
+            np.save(zielpfad, traj) 
+            
+         else:
+            os.makedirs(f"{output_path}/test", exist_ok=True)
+            os.makedirs(f"{output_path}/test/{oberordner}", exist_ok=True)
+            zielpfad = f"{output_path}/test/{oberordner}/{sample}"
+            np.save(zielpfad, traj) 
+
+
 if __name__ == "__main__":
     # Austesten
     dataset_building()

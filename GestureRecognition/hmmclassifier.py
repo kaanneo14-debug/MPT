@@ -101,12 +101,12 @@ class HMMClassifier:
         # Vorbereitung
         os.makedirs("models", exist_ok=True)
         # Iteriere oberordner in processed_data | Für jedes Label
-        for oberordner in os.listdir("processed_data"):
+        for oberordner in os.listdir("processed_data/train"):
             os.makedirs(f"models/{oberordner}", exist_ok=True)
             X = np.empty((0, 2))
             lengths = []
-            for sample in os.listdir(f"processed_data/{oberordner}"):
-                traj = np.load(f"processed_data/{oberordner}/{sample}")
+            for sample in os.listdir(f"processed_data/train/{oberordner}"):
+                traj = np.load(f"processed_data/train/{oberordner}/{sample}")
                 # Sequenzen konkatinieren
                 X = np.concatenate([X, traj], axis=0)
                 # Längen konkatinieren
@@ -211,8 +211,8 @@ class HMMClassifier:
 
 model = HMMClassifier()
 model.fit()
-for oberordner in os.listdir("processed_data"):
-    for sample in os.listdir(f"processed_data/{oberordner}"):
-        traj = np.load(f"processed_data/{oberordner}/{sample}")
+for oberordner in os.listdir("processed_data/test"):
+    for sample in os.listdir(f"processed_data/test/{oberordner}"):
+        traj = np.load(f"processed_data/test/{oberordner}/{sample}")
         scores = model.decision_function(traj)
         print( scores )
