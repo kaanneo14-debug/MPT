@@ -1,3 +1,8 @@
+import os
+import numpy as np
+import pickle
+from hmmlearn import hmm
+
 class HMMClassifier:
     """
     TODO: Implementiere einen HMM-basierten Klassifikator
@@ -9,7 +14,7 @@ class HMMClassifier:
     :mod:`hmmlearn` benutzt werden
 
     Grundidee:
-    ----------
+      ----------
     - Trainiere ein Modell pro Klasse
     - Bewerte neue Sequenzen anhand der Likelihood unter jedem Modell
     - Wähle die Klasse mit der höchsten Wahrscheinlichkeit
@@ -93,9 +98,28 @@ class HMMClassifier:
         -------
         self
         """
-        pass
+        # Vorbereitung
+        os.makedirs("models", exist_ok=True)
+        # Iteriere oberordner in processed_data | Für jedes Label
+        for oberordner in os.listdir("processed_data/train"):
+            os.makedirs(f"models/{oberordner}", exist_ok=True)
+            X = np.empty((0, 2))
+            lengths = []
+            for sample in os.listdir(f"processed_data/train/{oberordner}"):
+                traj = np.load(f"processed_data/train/{oberordner}/{sample}")
+                # Sequenzen konkatinieren
+                X = np.concatenate([X, traj], axis=0)
+                # Längen konkatinieren
+                lengths.append(traj.shape[0])
+            # Lade das HMM
+            model = hmm.GaussianHMM(n_components=7, covariance_type="diag", n_iter=50)
+            # Trainiere das HMM
+            model.fit(X, lengths)
+            # Speichere das Model in models
+            with open(f"models/{oberordner}/{oberordner}.pkl", "wb") as f:
+                pickle.dump(model, f)
 
-    def decision_function(self):
+    def decision_function(self, traj):
         """
         TODO: Berechne Scores für jede Klasse
 
@@ -131,9 +155,20 @@ class HMMClassifier:
         scores : array-like
             Score pro Sequenz und Klasse
         """
-        pass
+        scores = []
+        # Für jedes Klassenmodell
+        for oberordner in os.listdir("models"):
+            for model_file in os.listdir(f"models/{oberordner}"):
+                # Lade das Model
+                with open(f"models/{oberordner}/{model_file}", "rb") as f:
+                    model = pickle.load(f)
+                # Berechne den Score
+                score = model.score(traj)
+                scores.append( (oberordner, score) )
+        return scores
 
-    def predict(self):
+
+    def predict(self, traj):
         """
         TODO: Sage Klassenlabels voraus
 
@@ -165,4 +200,19 @@ class HMMClassifier:
         labels : list
             Vorhergesagte Labels
         """
-        pass
+        max_score = float("-inf")
+        scores = self.decision_function(traj)
+        for label, score in scores:
+            if score > max_score:
+                max_score = score
+                max_label = label
+        return max_label
+
+
+model = HMMClassifier()
+model.fit()
+for oberordner in os.listdir("processed_data/test"):
+    for sample in os.listdir(f"processed_data/test/{oberordner}"):
+        traj = np.load(f"processed_data/test/{oberordner}/{sample}")
+        scores = model.decision_function(traj)
+        print( scores )

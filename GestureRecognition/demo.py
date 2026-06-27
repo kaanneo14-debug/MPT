@@ -1,5 +1,5 @@
 from SignalHub import Engine, ConfigParser, Webcam
-from GestureRecognition.modules import *
+from modules import *
 import argparse
 
 def run(parser: argparse.ArgumentParser):
@@ -11,9 +11,9 @@ def run(parser: argparse.ArgumentParser):
         ConfigParser(parser),
         Webcam(),
         HandDetector(),
-        TrailMarker(),
-        Preprocessor(),
-        HMMModule(),
+        #TrailMarker(),
+        #Preprocessor(),
+        #HMMModule(),
     ]
     engine = Engine(modules=modules, signals={})
     signals = engine.run({})
