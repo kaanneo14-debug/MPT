@@ -98,6 +98,7 @@ class HandDetector(Module):
             outputSchema={"type": "object", "properties": {outputSignal: {}}},
             name="detector",
         )
+        self.outputSignal = outputSignal
 
     def start(self, data):
         """
@@ -159,11 +160,17 @@ class HandDetector(Module):
 
         result = self.detector.detect(bild3)
 
-        galy = GALY(bild2)
+        H, W = bild2.shape[:2]
+
+        galy = GALY()
+        galy.canvas("webcam", (W, H), (0, 0, 0), dtype=np.uint8)
+        galy.blit("webcam", (0, 0))
+        galy.layer("landmarks")
+        galy.set_layer_affine_mapping(np.array([[W, 0, 0], [0, H, 0]], dtype=np.float64))
 
         for i in range(len(result.hand_landmarks)):
             hand = result.hand_landmarks[i]
-            galy.draw_hand_landmarks(hand)
+            draw_hand_landmarks(hand, galy)
 
         return {self.outputSignal: result, "galy": galy}
 

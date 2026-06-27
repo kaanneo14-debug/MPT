@@ -12,3 +12,4 @@ wheels/
 # Other
 data
 .training.py
+hand_landmarker.task
