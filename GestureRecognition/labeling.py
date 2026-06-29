@@ -89,7 +89,7 @@ def data_labeling(times: int, label: str):
         Kann ebenfalls frei gestaltet werden (z. B. dynamische Labels, mehrere Klassen gleichzeitig).
     """
     counter = 0
-    for _ in range(times):
+    while True:
       # Ordner erstellen, falls nicht vorhanden
       oberordner = rf"datasets/{label}"
       os.makedirs(oberordner, exist_ok=True)
@@ -199,5 +199,5 @@ def dataset_building(output_path="processed_data"):
 
 if __name__ == "__main__":
     # Austesten
-    dataset_building()
-    #data_labeling(5, "W")
+    #dataset_building()
+    data_labeling(1, "W")
