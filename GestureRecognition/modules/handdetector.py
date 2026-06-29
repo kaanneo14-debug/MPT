@@ -43,12 +43,10 @@ class HandDetector(Module):
             outputSchema={"type": "object", "properties": {outputSignal: {}}},
             name="detector",
         )
+        self.outputSignal = outputSignal
 
     def start(self, data):
-        # 1. Basis-Optionen festlegen: Wo liegt das trainierte Modell?
         base_options = python.BaseOptions(model_asset_path='hand_landmarker.task')
-        
-        # 2. Spezifische Optionen für die Handdetektion konfigurieren
         options = vision.HandLandmarkerOptions(
             base_options=base_options,
             num_hands=1,
@@ -56,25 +54,30 @@ class HandDetector(Module):
             min_hand_presence_confidence=0.5,
             min_tracking_confidence=0.5
         )
-        
-        # 3. Das Modell in den Arbeitsspeicher laden und an die Instanz (self) binden
-        self.detector = vision.HandLandmarker.create_from_options(options)        
+        self.detector = vision.HandLandmarker.create_from_options(options)
         return {}
 
     def step(self, data):
-
         bild = data["webcam"]
 
         bild2 = cv2.cvtColor(bild, cv2.COLOR_BGR2RGB)
         bild3 = mp.Image(image_format=mp.ImageFormat.SRGB, data=bild2)
 
         result = self.detector.detect(bild3)
+
+        H, W = bild2.shape[:2]
+
         galy = GALY()
+        galy.canvas("webcam", (W, H), (0, 0, 0), dtype=np.uint8)
+        galy.blit("webcam", (0, 0))
+        galy.layer("landmarks")
+        galy.set_layer_affine_mapping(np.array([[W, 0, 0], [0, H, 0]], dtype=np.float64))
 
         for i in range(len(result.hand_landmarks)):
             hand = result.hand_landmarks[i]
             draw_hand_landmarks(hand, galy)
-        return {"detector": result, "galy": galy}
+
+        return {self.outputSignal: result, "galy": galy}
 
     def stop(self, data):
         pass
