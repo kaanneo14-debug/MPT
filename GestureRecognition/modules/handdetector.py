@@ -43,7 +43,6 @@ class HandDetector(Module):
             outputSchema={"type": "object", "properties": {outputSignal: {}}},
             name="detector",
         )
-        self.outputSignal = outputSignal
 
     def start(self, data):
         base_options = python.BaseOptions(model_asset_path='hand_landmarker.task')
@@ -68,8 +67,8 @@ class HandDetector(Module):
         H, W = bild2.shape[:2]
 
         galy = GALY()
-        galy.canvas("webcam", (W, H), (0, 0, 0), dtype=np.uint8)
-        galy.blit("webcam", (0, 0))
+        # galy.canvas("webcam", (W, H), (0, 0, 0), dtype=np.uint8)
+        # galy.blit("webcam", (0, 0))
         galy.layer("landmarks")
         galy.set_layer_affine_mapping(np.array([[W, 0, 0], [0, H, 0]], dtype=np.float64))
 
@@ -77,7 +76,7 @@ class HandDetector(Module):
             hand = result.hand_landmarks[i]
             draw_hand_landmarks(hand, galy)
 
-        return {self.outputSignal: result, "galy": galy}
+        return {"detector": result, "galy": galy}
 
     def stop(self, data):
         pass
