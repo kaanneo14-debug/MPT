@@ -1,5 +1,5 @@
 from SignalHub import GALY, bgr, get_nested_key, Module
-
+import pickle
 
 class HMMModule(Module):
     """
@@ -69,6 +69,8 @@ class HMMModule(Module):
             outputSchema={"type": "object", "properties": {outputSignal: {}}},
             name="hiddenmarkov",
         )
+        self.outputSignal = outputSignal
+        self.model_path = model_path
 
     def start(self, data):
         """
@@ -107,6 +109,11 @@ class HMMModule(Module):
         dict
             Ein leeres Dictionary.
         """
+         
+ 
+        with open(self.model_path, "rb") as f:
+            self.models = pickle.load(f)
+ 
         return {}
 
     def step(self, data):
@@ -169,7 +176,40 @@ class HMMModule(Module):
 
             ``return {outputSignal: result, "galy": galy}``
         """
-        return {}
+        traj = data["preprocessor"]
+ 
+        # Keine oder zu kurze Trajektorie -> nichts zu klassifizieren
+        if traj is None or len(traj) < 2:
+            return {}
+ 
+        # Score pro Klasse berechnen
+        scores = {}
+        for label, model in self.models.items():
+            try:
+                scores[label] = model.score(traj)
+            except Exception:
+                scores[label] = float("-inf")
+ 
+        # Klasse mit dem besten Score wählen
+        best_label = max(scores, key=scores.get)
+        best_score = scores[best_label]
+ 
+        result = {"label": best_label, "score": best_score}
+ 
+        # Visualisierung: Label + Score als Text einblenden
+        config = data["config"]
+        scale = get_nested_key("hiddenmarkov.font_scale", config, default=0.7)
+ 
+        galy = GALY()
+        galy.layer("hmm_overlay", alwaysVisible=True)
+        galy.putText(
+            f"{best_label}: {best_score:.2f}",
+            (10, 30),
+            fontScale=scale,
+            color=bgr("#00FF00"),
+        )
+ 
+        return {self.outputSignal: result, "galy": galy}
 
     def stop(self, data):
         """
