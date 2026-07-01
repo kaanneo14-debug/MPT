@@ -208,11 +208,76 @@ class HMMClassifier:
                 max_label = label
         return max_label
 
+    def evaluate_classifier(self):
+        """
+        Teilt die Daten aus processed_data/<label>/ automatisch in Train (80%)
+        und Test (20%), trainiert den Klassifikator und berechnet die Accuracy.
 
-model = HMMClassifier()
-model.fit()
-for oberordner in os.listdir("processed_data/test"):
-    for sample in os.listdir(f"processed_data/test/{oberordner}"):
-        traj = np.load(f"processed_data/test/{oberordner}/{sample}")
-        scores = model.decision_function(traj)
-        print( scores )
+        Returns
+        -------
+        dict mit:
+            - "accuracy": float
+            - "correct": int
+            - "total": int
+            - "results": list of (true_label, predicted_label)
+        """
+        import random
+        import shutil
+
+        # Train/Test-Unterordner anlegen und befüllen
+        for split in ("train", "test"):
+            if os.path.exists(f"processed_data/{split}"):
+                shutil.rmtree(f"processed_data/{split}")
+            os.makedirs(f"processed_data/{split}")
+
+        for label in os.listdir("processed_data"):
+            if label in ("train", "test"):
+                continue
+            samples = sorted([
+                f for f in os.listdir(f"processed_data/{label}")
+                if f.endswith(".npy")
+            ])
+            random.shuffle(samples)
+            split_idx = max(1, int(len(samples) * 0.8))
+            train_samples = samples[:split_idx]
+            test_samples = samples[split_idx:] if len(samples) > 1 else samples[:1]
+
+            for split, files in (("train", train_samples), ("test", test_samples)):
+                dest = f"processed_data/{split}/{label}"
+                os.makedirs(dest, exist_ok=True)
+                for f in files:
+                    shutil.copy(f"processed_data/{label}/{f}", f"{dest}/{f}")
+
+        # Trainieren
+        self.fit()
+
+        # Evaluieren
+        correct = 0
+        total = 0
+        results = []
+
+        for true_label in os.listdir("processed_data/test"):
+            test_dir = f"processed_data/test/{true_label}"
+            for sample_file in os.listdir(test_dir):
+                traj = np.load(f"{test_dir}/{sample_file}")
+                predicted_label = self.predict(traj)
+                results.append((true_label, predicted_label))
+                total += 1
+                if predicted_label == true_label:
+                    correct += 1
+
+        accuracy = correct / total if total > 0 else 0.0
+        print(f"Accuracy: {accuracy * 100:.2f}%  ({correct}/{total})")
+
+        return {
+            "accuracy": accuracy,
+            "correct": correct,
+            "total": total,
+            "results": results,
+        }
+
+
+if __name__ == "__main__":
+    model = HMMClassifier()
+    results = model.evaluate_classifier()
+    print(results)
