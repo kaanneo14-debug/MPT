@@ -11,7 +11,7 @@ def run(parser: argparse.ArgumentParser):
         ConfigParser(parser),
         Webcam(),
         HandDetector(),
-        #TrailMarker(),
+        TrailMarker(),
         #Preprocessor(),
         #HMMModule(),
     ]
