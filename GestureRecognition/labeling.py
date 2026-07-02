@@ -13,81 +13,6 @@ import yaml
 
 
 def data_labeling(times: int, label: str):
-    """
-    TODO: data_labeling: Datenerfassung für Gesten (SignalHub)
-
-    Ziel:
-    -----
-    Implementiere eine Funktion, mit der Trainingsdaten für eine bestimmte
-    Geste aufgenommen und gespeichert werden können.
-
-    Anforderungen / Ideen:
-    ----------------------
-
-    1. Aufnahme starten
-
-       - Starte SignalHub über einen Subprocess
-       - Übergib einen Dateipfad für die Aufnahme
-       - Überlege, welche Module aufgenommen werden sollen
-       - Nimm entsprechende Änderungen in der ``config.yaml`` vor
-
-    root = os.getcwd()
-    data_path = os.path.join(root, "data")
-
-    2. Interaktive Steuerung (optional)
-
-       - Implementiere eine einfache Benutzerinteraktion:
-         - Aufnahme speichern
-         - Aufnahme verwerfen
-         - Programm beenden
-
-    .. tip::
-
-       Die Funktion ``getch()`` (Aus dem Modul Linux :mod:`getch` oder bei Windows :mod:`msvcrt`) ist sehr hilfreich, um einzelne Tastendrücke
-       direkt auszulesen (ohne Enter). Damit kannst du dir ein schnelles
-       Labeling-Interface bauen.
-
-       Beispiel:
-
-       .. code-block:: text
-
-           ESC → speichern
-           andere Taste → verwerfen
-
-    3. Daten sichten und bereinigen
-
-       - Lade die aufgenommenen Daten
-       - Überlege:
-         - Welche Teile sind relevant?
-         - Welche Frames sind leer oder unbrauchbar?
-         - Sollten gewisse Sequenzen evtl. gar nicht benutzt werden?
-       - Entferne unnötige Anteile (z. B. keine erkannte Hand am Anfang/Ende)
-
-    4. Speicherung
-
-       - Speichere Daten strukturiert nach Labels (z. B. Ordnerstruktur)
-       - Jede Aufnahme sollte einzeln gespeichert werden
-
-    .. note::
-
-       Die konkrete Umsetzung (Dateiformat, Struktur, Ablauf) ist bewusst offen.
-       Entwickle ein System, das für dich sinnvoll ist und sich gut weiterverarbeiten lässt.
-
-    .. warning::
-
-       Ziel ist nicht nur, dass es „funktioniert“, sondern ein sauberer und
-       effizienter Workflow für Datensammlung.
-
-    Parameters
-    ----------
-    times : int
-        Wie viele Aufnahmen gemacht werden sollen.
-        Kann frei angepasst werden (z. B. Endlosschleife oder interaktive Steuerung).
-
-    label : str
-        Name der Geste / Klasse.
-        Kann ebenfalls frei gestaltet werden (z. B. dynamische Labels, mehrere Klassen gleichzeitig).
-    """
     counter = 0
     while True:
       # Ordner erstellen, falls nicht vorhanden
@@ -118,7 +43,7 @@ def data_labeling(times: int, label: str):
       prozess.wait()
 
         
-      eingabe = input("Zum verwerfen N drücken. Ansonsten beliebige Taste")  # input ist os unabhängig
+      eingabe = input("Zum verwerfen N drücken. Ansonsten beliebige Taste: ")  # input ist os unabhängig
    
 
       # Verwerfen
@@ -138,17 +63,23 @@ def dataset_building(output_path="processed_data"):
     with open("config.yml", "r") as f:
         config = yaml.safe_load(f)
     finger_idx = get_nested_key("preprocessor.finger_idx", config)
-    os.makedirs(output_path, exist_ok=True)
+
+    os.makedirs(output_path, exist_ok=True) # sicherstellen, dass zielordner existiert
+
     # iteriere durch alle oberordner in raw-data
     for oberordner in os.listdir("datasets"):
+
       # Trainingsdaten festlegen
       files = os.listdir(f"datasets/{oberordner}")
       boundary = int(0.8*len(files))
       train_files = files[:boundary] 
+
       # iteriere durch alle samples in raw data
       for sample in os.listdir(f"datasets/{oberordner}"):
+
          # vorbereitunng
          traj = deque()
+         
          # lade den sample
          with open(f"datasets/{oberordner}/{sample}", "rb") as f:
              file = pickle.load(f)         

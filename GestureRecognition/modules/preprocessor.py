@@ -202,6 +202,10 @@ class Preprocessor(Module):
         if scale > 1e-6:  # falls abstand == 0
             traj = traj / scale
 
+        # 4. Verbindungsvektor
+        traj = np.diff(traj, axis=0)
+        print(traj)
+
         return {"preprocessor": traj}
 
     def stop(self, data):

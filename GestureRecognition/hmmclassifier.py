@@ -103,8 +103,10 @@ class HMMClassifier:
         # Iteriere oberordner in processed_data | Für jedes Label
         for oberordner in os.listdir("processed_data/train"):
             os.makedirs(f"models/{oberordner}", exist_ok=True)
+
             X = np.empty((0, 2))
             lengths = []
+
             for sample in os.listdir(f"processed_data/train/{oberordner}"):
                 traj = np.load(f"processed_data/train/{oberordner}/{sample}")
                 # Sequenzen konkatinieren
@@ -112,7 +114,7 @@ class HMMClassifier:
                 # Längen konkatinieren
                 lengths.append(traj.shape[0])
             # Lade das HMM
-            model = hmm.GaussianHMM(n_components=7, covariance_type="diag", n_iter=50)
+            model = hmm.GaussianHMM(n_components=7, n_iter=50)  #covariance_type="diag"
             # Trainiere das HMM
             model.fit(X, lengths)
             # Speichere das Model in models
