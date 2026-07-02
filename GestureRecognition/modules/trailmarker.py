@@ -18,38 +18,59 @@ class TrailMarker(Module):
 
         # Datentyp zum aufzeichnen der Trajektorie erstellen
         self.trajectory = deque(maxlen=self.buffer_size)
+        
         self.lost_frames_counter = 0
         self.galy = None
         return {}
 
     def step(self, data):
-        input_data=data["detector"] #hier werden die detektierten hände plus landmarks geladen (für einen schritt)
-
-        if input_data is None or len(input_data.hand_landmarks) == 0:
-          self.galy = GALY(data["webcam"])
-
-        if input_data is None:        # wenn nichts detektiert wird ist die funktion vorbei
-          self.lost_frames_counter+=1 # der lost frames counter geht dann einen hoch
-
-          if self.lost_frames_counter > self.max_lost: # wenn Max lost frames überschritten wird , wird die trajectory neu angefangen und der counter zurückgesetzt
-             self.trajectory.clear()
-             self.lost_frames_counter=0
+        input_data=data["detector"] 
+        self.galy=GALY()
+       
+        if not input_data.hand_landmarks:        
+          self.lost_frames_counter+=1 
+          for i in range(len(self.trajectory) - 1):
+            x1, y1 = self.trajectory[i]
+            x2, y2 = self.trajectory[i + 1]
+            
+            self.galy.line(
+                (x1, y1),
+                (x2, y2),
+                (255, 0, 0),   # rot
+                thickness=2
+            )
              
-          return {}
+          if self.lost_frames_counter > self.max_lost: 
+             self.lost_frames_counter=0
+             self.trajectory.clear()
+          
+          return {"galy": self.galy}
         
         self.lost_frames_counter = 0
                
-        mark = input_data.hand_landmarks[0][self.finger_idx]  # landmark von zeichnenden finger definiert
-        self.trajectory.append((mark.x, mark.y))          #position dieser landmark gespeichert im trajectory
-        traj = self.trajectory
+        mark = input_data.hand_landmarks[0][self.finger_idx]
+        width = data["config"]["webcam"]["width"]
+        height = data["config"]["webcam"]["height"]
 
-        if len(traj) > 1:             # nur linien malen wenn mehr als 1 punkt vorhanden
-          x1, y1 = traj[-2]            # hier wird die position der vorletzte landmark definiert
-          x2, y2 = traj[-1]            # hier die position des letzten eingetragenen landmark
 
-          self.galy.line(x1, y1, x2, y2)    # hier wird eine linie von der letzten zur vorletzten landmark im galy gespeichert
+        x = int(mark.x * width)
+        y = int(mark.y * height)  
 
+        self.trajectory.append((x, y))
+        for i in range(len(self.trajectory) - 1):
+            x1, y1 = self.trajectory[i]
+            x2, y2 = self.trajectory[i + 1]
+             
+                
+            self.galy.line(
+            (x1, y1),
+            (x2, y2),
+            (255, 0, 0),   # rot
+            thickness=2
+        )
+        
         return {"galy": self.galy}
+          
 
     def stop(self, data):
         pass
