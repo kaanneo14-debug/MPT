@@ -71,8 +71,9 @@ class HandDetector(Module):
         galy.layer("landmarks")
         galy.set_layer_affine_mapping(np.array([[W, 0, 0], [0, H, 0]], dtype=np.float64))
 
-        hand = result.hand_landmarks[0]
-        draw_hand_landmarks(hand, galy)
+        if result.hand_landmarks:
+            hand = result.hand_landmarks[0]
+            draw_hand_landmarks(hand, galy)
 
         return {"detector": result, "galy": galy}
 
