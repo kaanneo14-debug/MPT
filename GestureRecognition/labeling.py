@@ -95,23 +95,23 @@ def data_labeling(times: int, label: str):
       os.makedirs(oberordner, exist_ok=True)
 
       # Richtigen filenamen rausifnden mit regex
-      max_index = -1
+      max_num = -1
+      # alle dateien iterieren
       for datei in os.listdir(oberordner):
-         match = re.search(r"(\d+)\.pkl$", datei)
-         if match:
-               index = int(match.group(1))
-               max_index = max(max_index, index)
-      neuer_index = max_index + 1
-      name = f"{label}_{neuer_index}.pkl"
-      zielpfad = os.path.join(oberordner, name)
+         result = re.search(r"(\d+)\.pkl", datei)
+         if result:  # falls datei bereits vorhanden
+               index = int(result.group(1))
+               max_num = max(max_num, index)
+      idx = max_num + 1
+      file_name = f"{label}_{idx}.pkl"
+      zielpfad = os.path.join(oberordner, file_name)
 
       # Pipeline starten
-      prozess = subprocess.Popen([
-                  sys.executable,
+      prozess = subprocess.Popen([ # neuen Prozess starten (UNterprozess)
+                  sys.executable, # pfad zu akt python-interpreter
                   "GestureRecognition/demo.py",
                   "--mode", "record",
-                  "--recorder.file", zielpfad],
-                  creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+                  "--recorder.file", zielpfad])
                
       # Beenden bei Tastendruck
       print("ESC zum Beenden der AUfnahme")      
