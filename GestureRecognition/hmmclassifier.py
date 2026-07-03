@@ -210,11 +210,3 @@ class HMMClassifier:
                 max_label = label
         return max_label
 
-
-model = HMMClassifier()
-model.fit()
-for oberordner in os.listdir("processed_data/test"):
-    for sample in os.listdir(f"processed_data/test/{oberordner}"):
-        traj = np.load(f"processed_data/test/{oberordner}/{sample}")
-        scores = model.decision_function(traj)
-        print( scores )

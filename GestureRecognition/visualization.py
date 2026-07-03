@@ -101,7 +101,61 @@ def evaluate_classifier():
     - Weitere Metriken (Precision, Recall, F1)
     - Vergleich verschiedener Modelle
     """
-    pass
+    import os
+    import numpy as np
+    import matplotlib.pyplot as plt
+    from hmmclassifier import HMMClassifier
+
+    # Modell trainieren (train/test bereits durch dataset_building() angelegt)
+    clf = HMMClassifier()
+    clf.fit()
+
+    # Auf Testdaten evaluieren
+    true_labels = []
+    pred_labels = []
+
+    for true_label in os.listdir("processed_data/test"):
+        test_dir = f"processed_data/test/{true_label}"
+        for sample_file in os.listdir(test_dir):
+            traj = np.load(f"{test_dir}/{sample_file}")
+            predicted = clf.predict(traj)
+            true_labels.append(true_label)
+            pred_labels.append(predicted)
+
+    # Accuracy berechnen
+    correct = sum(t == p for t, p in zip(true_labels, pred_labels))
+    total = len(true_labels)
+    accuracy = correct / total if total > 0 else 0.0
+    print(f"Accuracy: {accuracy * 100:.2f}%  ({correct}/{total})")
+
+    # Konfusionsmatrix berechnen
+    classes = sorted(set(true_labels) | set(pred_labels))
+    n = len(classes)
+    idx = {c: i for i, c in enumerate(classes)}
+    matrix = np.zeros((n, n), dtype=int)
+    for true, pred in zip(true_labels, pred_labels):
+        matrix[idx[true], idx[pred]] += 1
+
+    # Konfusionsmatrix plotten
+    fig, ax = plt.subplots(figsize=(max(6, n), max(5, n - 1)))
+    im = ax.imshow(matrix, cmap="Blues")
+    plt.colorbar(im, ax=ax)
+    ax.set_xticks(range(n))
+    ax.set_yticks(range(n))
+    ax.set_xticklabels(classes)
+    ax.set_yticklabels(classes)
+    ax.set_xlabel("Vorhergesagt")
+    ax.set_ylabel("Tatsächlich")
+    ax.set_title(f"Konfusionsmatrix  |  Accuracy: {accuracy * 100:.1f}%")
+
+    for i in range(n):
+        for j in range(n):
+            ax.text(j, i, str(matrix[i, j]),
+                    ha="center", va="center",
+                    color="white" if matrix[i, j] > matrix.max() / 2 else "black")
+
+    plt.tight_layout()
+    plt.show()
 
 
 def replay_recordings():
