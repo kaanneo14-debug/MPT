@@ -1,4 +1,5 @@
 from SignalHub import GALY, bgr, get_nested_key, Module
+from hmmclassifier import HMMClassifier
 
 
 class HMMModule(Module):
@@ -68,8 +69,9 @@ class HMMModule(Module):
             inputSignals=["config", "preprocessor"],
             outputSchema={"type": "object", "properties": {outputSignal: {}}},
             name="hiddenmarkov",
+            
         )
-
+        self.outputSignal = outputSignal
     def start(self, data):
         """
         Initialisierung des Moduls.
@@ -107,6 +109,7 @@ class HMMModule(Module):
         dict
             Ein leeres Dictionary.
         """
+        self.clf = HMMClassifier()
         return {}
 
     def step(self, data):
@@ -169,7 +172,24 @@ class HMMModule(Module):
 
             ``return {outputSignal: result, "galy": galy}``
         """
-        return {}
+        traj = data.get("preprocessor")
+
+        if traj is None or len(traj) == 0:
+            return {self.outputSignal: None}
+
+        scores = self.clf.decision_function(traj)
+
+        if not scores:
+            return {self.outputSignal: None}
+
+        label, best_score = max(scores, key=lambda item: item[1])
+
+        galy = GALY()
+        galy.layer("markov")
+        galy.putText(f"{label} ({best_score:.2f})", (10, 30))
+
+        return {self.outputSignal: {"label": label, "score": best_score}, "galy": galy}
+        
 
     def stop(self, data):
         """
