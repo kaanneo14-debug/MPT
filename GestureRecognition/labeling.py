@@ -43,8 +43,8 @@ def data_labeling(times: int, label: str):
       prozess.wait()
 
         
-      eingabe = input("Zum verwerfen N drücken. Ansonsten beliebige Taste: ")  # input ist os unabhängig
-   
+      eingabe = input("Enter druecken zum Speichern, N zum Verwerfen: ").strip().lower()  # input ist os unabhängig
+
 
       # Verwerfen
       if eingabe == "n":
