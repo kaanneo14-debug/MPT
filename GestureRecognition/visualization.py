@@ -1,4 +1,68 @@
-def visualize_dataset():
+import os
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+def visualize_dataset(data_dir="processed_data/train"):
+    """
+    Visualisiert die prozessierten Trajektorien der Gesten.
+    Ziel: Optische Verifikation der Datenqualität und Identifikation von Ausreißern.
+    """
+    if not os.path.exists(data_dir):
+        print(
+            f"Fehler: Verzeichnis '{data_dir}' existiert nicht. Führe zuerst dataset_building() aus."
+        )
+        return
+
+    # Wir betrachten alle Klassen, um das "Big Picture" zu wahren
+    classes = sorted(os.listdir(data_dir))
+    num_classes = len(classes)
+
+    # Raster für die Subplots berechnen
+    cols = 3
+    rows = int(np.ceil(num_classes / cols))
+
+    fig, axes = plt.subplots(rows, cols, figsize=(15, 4 * rows))
+    # Sicherstellen, dass axes immer ein flaches Array ist, auch bei wenig Klassen
+    if num_classes == 1:
+        axes = [axes]
+    else:
+        axes = axes.flatten()
+
+    for i, cls in enumerate(classes):
+        cls_dir = os.path.join(data_dir, cls)
+        samples = os.listdir(cls_dir)
+
+        ax = axes[i]
+        ax.set_title(f"Klasse: {cls} ({len(samples)} Samples)")
+
+        for sample in samples:
+            # Lade die prozessierten Differenzvektoren
+            traj_diff = np.load(os.path.join(cls_dir, sample))
+
+            # Rekonstruktion der absoluten Form via cumsum (Startpunkt bei 0,0)
+            traj_shape = np.vstack([[0, 0], np.cumsum(traj_diff, axis=0)])
+
+            # y-Achse invertieren, da Bildkoordinaten (OpenCV/Webcam) y nach unten definieren,
+            # Matplotlib jedoch standardmäßig y nach oben plottet.
+            ax.plot(traj_shape[:, 0], -traj_shape[:, 1], alpha=0.3, linewidth=1.5)
+
+            # Optional: Den Startpunkt als kleinen Punkt markieren (hilft bei der Analyse der Zeichenrichtung)
+            ax.scatter(0, 0, color="red", s=10, zorder=5)
+
+        ax.axis("equal")  # Wichtig, um Verzerrungen der Proportionen zu vermeiden
+        ax.grid(True, linestyle="--", alpha=0.6)
+
+    # Verbleibende leere Subplots ausblenden
+    for j in range(num_classes, len(axes)):
+        axes[j].axis("off")
+
+    plt.tight_layout()
+    plt.show()
+
+
+if __name__ == "__main__":
+    visualize_dataset()
     """
     TODO: Visualisierung des eigenen Datensatzes
 

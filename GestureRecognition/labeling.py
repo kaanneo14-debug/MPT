@@ -130,5 +130,5 @@ def dataset_building(output_path="processed_data"):
 
 if __name__ == "__main__":
     # Austesten
-    #dataset_building()
-    data_labeling(20, "J")
+    dataset_building()
+    #data_labeling(30, "I")
