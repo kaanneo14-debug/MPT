@@ -1,5 +1,7 @@
 from SignalHub import GALY, bgr, get_nested_key, Module
-
+from hmmclassifier import HMMClassifier 
+import pickle
+import os
 
 class HMMModule(Module):
     """
@@ -69,7 +71,8 @@ class HMMModule(Module):
             outputSchema={"type": "object", "properties": {outputSignal: {}}},
             name="hiddenmarkov",
         )
-
+        self.outputSignal = outputSignal
+        
     def start(self, data):
         """
         Initialisierung des Moduls.
@@ -107,6 +110,7 @@ class HMMModule(Module):
         dict
             Ein leeres Dictionary.
         """
+        self.clf = HMMClassifier()
         return {}
 
     def step(self, data):
@@ -169,7 +173,32 @@ class HMMModule(Module):
 
             ``return {outputSignal: result, "galy": galy}``
         """
-        return {}
+        traj = data.get("preprocessor")
+
+        galy = GALY()
+        galy.layer("markov")
+
+        if traj is None or len(traj) == 0:
+            return {self.outputSignal: None, "galy": galy}
+
+        scores = self.clf.decision_function(traj)
+        print("SCORES:", scores)  # Debug - kannst du später entfernen
+
+        if not scores:
+            return {self.outputSignal: None, "galy": galy}
+
+        label, best_score = max(scores, key=lambda item: item[1])
+
+        galy.putText(
+            text=f"{label} ({best_score:.2f})",
+            org=(20, 40),
+            fontFace=0,
+            fontScale=1.2,
+            color=bgr("#00FF00"),
+            thickness=2
+        )
+
+        return {self.outputSignal: {"label": label, "score": best_score}, "galy": galy}
 
     def stop(self, data):
         """
