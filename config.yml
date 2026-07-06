@@ -6,7 +6,7 @@ recorder:
   record:
     - detector
 webcam:
-  deviceIndex: 0
+  deviceIndex: 1
   width: 640
   height: 360
   dtype: u8
