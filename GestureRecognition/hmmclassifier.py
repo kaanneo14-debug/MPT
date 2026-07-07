@@ -210,3 +210,9 @@ class HMMClassifier:
                 max_label = label
         return max_label
 
+if __name__ == "__main__":
+    # Modell trainieren (train/test bereits durch dataset_building() angelegt)
+    clf = HMMClassifier()
+    clf.fit()
+
+    
