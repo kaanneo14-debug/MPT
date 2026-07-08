@@ -34,7 +34,7 @@ def data_labeling(times: int, label: str):
       # Pipeline starten
       prozess = subprocess.Popen([ # neuen Prozess starten (UNterprozess)
                   sys.executable, # pfad zu akt python-interpreter
-                  "GestureRecognition/demo.py",
+                  "-m", "GestureRecognition.demo",
                   "--mode", "record",
                   "--recorder.file", zielpfad])
                
@@ -129,6 +129,5 @@ def dataset_building(output_path="processed_data"):
 
 
 if __name__ == "__main__":
-    # Austesten
-    dataset_building()
-    #data_labeling(30, "I")
+    data_labeling(30, "K")
+    #dataset_building()
