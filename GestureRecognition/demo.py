@@ -1,5 +1,5 @@
 from SignalHub import Engine, ConfigParser, Webcam
-from modules import *
+from .modules import *
 import argparse
 
 def run(parser: argparse.ArgumentParser):
