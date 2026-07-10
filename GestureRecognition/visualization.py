@@ -168,7 +168,7 @@ def evaluate_classifier():
     import os
     import numpy as np
     import matplotlib.pyplot as plt
-    from hmmclassifier import HMMClassifier
+    from .hmmclassifier import HMMClassifier
 
     # Modell trainieren (train/test bereits durch dataset_building() angelegt)
     clf = HMMClassifier()

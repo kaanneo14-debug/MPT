@@ -129,5 +129,5 @@ def dataset_building(output_path="processed_data"):
 
 
 if __name__ == "__main__":
-    data_labeling(30, "K")
-    #dataset_building()
+    dataset_building()
+    #data_labeling(30, "I")
