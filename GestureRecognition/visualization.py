@@ -1,4 +1,7 @@
 import os
+import subprocess
+import sys
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -115,60 +118,10 @@ if __name__ == "__main__":
     pass
 
 def evaluate_classifier():
-    """
-    TODO: Evaluation deines Klassifikators
+    """Trainiert den HMMClassifier und plottet Accuracy + Konfusionsmatrix auf den Testdaten."""
+    from sklearn.metrics import ConfusionMatrixDisplay, accuracy_score
 
-    Ziel:
-    -----
-    Implementiere eine sinnvolle Auswertung deines Modells auf Testdaten.
-
-    Warum ist das wichtig?
-    ----------------------
-    - Du brauchst objektive Metriken für die Qualität deines Modells
-    - Training allein reicht nicht, entscheidend ist die Generalisierung
-
-    Anforderungen / Ideen:
-    ----------------------
-    - Lade ein trainiertes Modell
-    - Lade Testdaten (getrennt vom Training!)
-    - Berechne Vorhersagen
-    - Vergleiche Vorhersagen mit Ground Truth
-
-    Metriken:
-    ---------
-    - Klassifikationsgenauigkeit (Accuracy)
-    - Confusion Matrix
-
-    .. tip::
-       Eine Confusion Matrix zeigt dir:
-         - Welche Klassen gut erkannt werden
-         - Wo dein Modell Fehler macht
-
-    .. warning::
-       Testdaten dürfen **nicht** aus dem Training stammen!
-
-    Interpretation:
-    ---------------
-    Du solltest erklären können:
-    - Welche Klassen gut funktionieren
-    - Welche Klassen verwechselt werden
-    - Warum das passieren könnte
-
-    .. note::
-       Schlechte Performance liegt oft an:
-         - schlechten Trainingsdaten
-         - zu wenigen Beispielen
-         - ungeeigneten Features
-
-    Erweiterung (optional):
-    -----------------------
-    - Weitere Metriken (Precision, Recall, F1)
-    - Vergleich verschiedener Modelle
-    """
-    import os
-    import numpy as np
-    import matplotlib.pyplot as plt
-    from hmmclassifier import HMMClassifier
+    from .hmmclassifier import HMMClassifier
 
     # Modell trainieren (train/test bereits durch dataset_building() angelegt)
     clf = HMMClassifier()
@@ -182,86 +135,39 @@ def evaluate_classifier():
         test_dir = f"processed_data/test/{true_label}"
         for sample_file in os.listdir(test_dir):
             traj = np.load(f"{test_dir}/{sample_file}")
-            predicted = clf.predict(traj)
             true_labels.append(true_label)
-            pred_labels.append(predicted)
+            pred_labels.append(clf.predict(traj))
 
-    # Accuracy berechnen
-    correct = sum(t == p for t, p in zip(true_labels, pred_labels))
-    total = len(true_labels)
-    accuracy = correct / total if total > 0 else 0.0
-    print(f"Accuracy: {accuracy * 100:.2f}%  ({correct}/{total})")
-
-    # Konfusionsmatrix berechnen
-    classes = sorted(set(true_labels) | set(pred_labels))
-    n = len(classes)
-    idx = {c: i for i, c in enumerate(classes)}
-    matrix = np.zeros((n, n), dtype=int)
-    for true, pred in zip(true_labels, pred_labels):
-        matrix[idx[true], idx[pred]] += 1
+    correct = int(accuracy_score(true_labels, pred_labels, normalize=False))
+    accuracy = correct / len(true_labels)
+    print(f"Accuracy: {accuracy * 100:.2f}%  ({correct}/{len(true_labels)})")
 
     # Konfusionsmatrix plotten
-    fig, ax = plt.subplots(figsize=(max(6, n), max(5, n - 1)))
-    im = ax.imshow(matrix, cmap="Blues")
-    plt.colorbar(im, ax=ax)
-    ax.set_xticks(range(n))
-    ax.set_yticks(range(n))
-    ax.set_xticklabels(classes)
-    ax.set_yticklabels(classes)
+    classes = sorted(set(true_labels) | set(pred_labels))
+    size = min(14, max(6, len(classes) * 0.45))
+    fig, ax = plt.subplots(figsize=(size, size))
+    ConfusionMatrixDisplay.from_predictions(
+        true_labels, pred_labels, labels=classes, cmap="Blues", colorbar=True, ax=ax,
+    )
     ax.set_xlabel("Vorhergesagt")
     ax.set_ylabel("Tatsächlich")
     ax.set_title(f"Konfusionsmatrix  |  Accuracy: {accuracy * 100:.1f}%")
-
-    for i in range(n):
-        for j in range(n):
-            ax.text(j, i, str(matrix[i, j]),
-                    ha="center", va="center",
-                    color="white" if matrix[i, j] > matrix.max() / 2 else "black")
+    ax.tick_params(labelsize=8)
 
     plt.tight_layout()
     plt.show()
 
 
-def replay_recordings():
-    """
-    TODO: Exploration und Replay der aufgenommenen Rohdaten
-
-    Ziel:
-    -----
-    Ermögliche es, aufgenommene Sequenzen erneut abzuspielen
-    und qualitativ zu überprüfen.
-
-    Warum ist das wichtig?
-    ----------------------
-    - Du kannst überprüfen, ob deine Aufnahmen korrekt sind
-    - Fehler in der Datenerfassung werden früh sichtbar
-    - Du entwickelst ein besseres Verständnis für deine Daten
-
-    Anforderungen / Ideen:
-    ----------------------
-    - Lade gespeicherte Aufnahmen
-    - Spiele diese erneut ab (z. B. über SignalHub / Replay-Modus)
-    - Iteriere über verschiedene Labels und Beispiele
-
-    .. tip::
-       Besonders hilfreich:
-         - Vergleiche mehrere Beispiele derselben Klasse
-         - Suche nach inkonsistenten Bewegungen
-
-    .. warning::
-       Schlechte oder inkonsistente Aufnahmen führen fast immer zu
-       schlechten Modellen. Überprüfe deine Daten frühzeitig!
-
-    Abgabe:
-    -------
-    - Du solltest zeigen können, wie deine Daten aussehen (Replay)
-    - Du solltest erklären können:
-        - Welche Beispiele gut sind
-        - Welche problematisch sind
-
-    Erweiterung (optional):
-    -----------------------
-    - Automatisches Filtern schlechter Sequenzen
-    - Kombination mit Visualisierung
-    """
+def replay_recordings(label=None):
+    """Spielt aufgezeichnete Rohdaten Beispiel für Beispiel ab (ESC im Fenster = weiter zum nächsten)."""
+    labels = [label] if label else sorted(os.listdir("datasets"))
+    for lbl in labels:
+        for sample in sorted(os.listdir(f"datasets/{lbl}")):
+            path = f"datasets/{lbl}/{sample}"
+            print(f"Replay: {path}  (ESC im Fenster zum Weiterspringen)")
+            subprocess.run([
+                sys.executable, "-m", "GestureRecognition.demo",
+                "--mode", "replay",
+                "--recorder.file", path,
+            ])
     pass
