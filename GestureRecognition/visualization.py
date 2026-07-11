@@ -121,6 +121,40 @@ def evaluate_classifier():
     """Trainiert den HMMClassifier und plottet Accuracy + Konfusionsmatrix auf den Testdaten."""
     from sklearn.metrics import ConfusionMatrixDisplay, accuracy_score
 
+    Metriken:
+    ---------
+    - Klassifikationsgenauigkeit (Accuracy)
+    - Confusion Matrix
+
+    .. tip::
+       Eine Confusion Matrix zeigt dir:
+         - Welche Klassen gut erkannt werden
+         - Wo dein Modell Fehler macht
+
+    .. warning::
+       Testdaten dürfen **nicht** aus dem Training stammen!
+
+    Interpretation:
+    ---------------
+    Du solltest erklären können:
+    - Welche Klassen gut funktionieren
+    - Welche Klassen verwechselt werden
+    - Warum das passieren könnte
+
+    .. note::
+       Schlechte Performance liegt oft an:
+         - schlechten Trainingsdaten
+         - zu wenigen Beispielen
+         - ungeeigneten Features
+
+    Erweiterung (optional):
+    -----------------------
+    - Weitere Metriken (Precision, Recall, F1)
+    - Vergleich verschiedener Modelle
+    """
+    import os
+    import numpy as np
+    import matplotlib.pyplot as plt
     from .hmmclassifier import HMMClassifier
 
     # Modell trainieren (train/test bereits durch dataset_building() angelegt)
