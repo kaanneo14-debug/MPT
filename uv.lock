@@ -318,6 +318,7 @@ source = { virtual = "." }
 dependencies = [
     { name = "hmmlearn" },
     { name = "mediapipe" },
+    { name = "scikit-learn" },
     { name = "signalhub" },
     { name = "tqdm" },
 ]
@@ -332,6 +333,7 @@ dev = [
 requires-dist = [
     { name = "hmmlearn", specifier = ">=0.3.3" },
     { name = "mediapipe", specifier = ">=0.10.32" },
+    { name = "scikit-learn", specifier = ">=1.9.0" },
     { name = "signalhub", git = "https://github.com/jaboll-ai/SignalHub.git?rev=pyproject" },
     { name = "tqdm", specifier = ">=4.67.3" },
 ]
