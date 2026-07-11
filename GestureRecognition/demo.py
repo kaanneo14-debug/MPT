@@ -4,7 +4,7 @@ import sys
 sys.path.insert(0, os.path.dirname(__file__))
 
 from SignalHub import Engine, ConfigParser, Webcam
-from .modules import *
+from modules import *
 import argparse
 
 def run(parser: argparse.ArgumentParser):
